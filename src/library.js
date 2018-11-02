@@ -2145,13 +2145,17 @@ LibraryManager.library = {
     // void *dlsym(void *restrict handle, const char *restrict name);
     // http://pubs.opengroup.org/onlinepubs/009695399/functions/dlsym.html
     symbol = UTF8ToString(symbol);
+    //console.log("dlsym");
 
     if (!LDSO.loadedLibs[handle]) {
       DLFCN.errorMsg = 'Tried to dlsym() from an unopened handle: ' + handle;
       return 0;
     }
+
     var lib = LDSO.loadedLibs[handle];
+#if !WASM_BACKEND
     symbol = '_' + symbol;
+#endif
     if (!lib.module.hasOwnProperty(symbol)) {
       DLFCN.errorMsg = ('Tried to lookup unknown symbol "' + symbol +
                              '" in dynamic lib: ' + lib.name);

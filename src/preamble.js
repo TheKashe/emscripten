@@ -730,6 +730,7 @@ Module["preloadedWasm"] = {}; // maps url to wasm instance exports
 
 addOnPreRun(function() {
   function loadDynamicLibraries(libs) {
+    err('loadDynamicLibrarys')
     if (libs) {
       libs.forEach(function(lib) {
         // libraries linked to main never go away
@@ -746,6 +747,7 @@ addOnPreRun(function() {
       return loadDynamicLibrary(lib, {loadAsync: true, global: true, nodelete: true});
     })).then(function() {
       // we got them all, wonderful
+      err('done loadDynamicLibrarys')
       removeRunDependency('preload_dynamicLibraries');
     });
     return;
@@ -1032,7 +1034,13 @@ Module['asm'] = function(global, env, providedBuffer) {
     'element': 'anyfunc'
   });
   env['__memory_base'] = {{{ GLOBAL_BASE }}}; // tell the memory segments where to place themselves
+#if WASM_BACKEND
+  env['__table_base'] = 1; // table starts at 1 by default (even in dynamic linking, for the main module)
+#else
   env['__table_base'] = 0; // table starts at 0 by default (even in dynamic linking, for the main module)
+#endif
+  //console.log("__memory_base: " + env['__memory_base']);
+  //console.log("__table_base: 0");
 
   var exports = createWasm(env);
 #if ASSERTIONS

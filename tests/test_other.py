@@ -3840,6 +3840,8 @@ int main()
     # SIDE_MODULE is only meaningful when compiling to wasm (or js+wasm)
     # otherwise, we are just linking bitcode, and should show an error
     for wasm in [0, 1]:
+      if self.is_wasm_backend():
+        continue
       print(wasm)
       process = run_process([PYTHON, EMCC, path_from_root('tests', 'hello_world.cpp'), '-s', 'SIDE_MODULE=1', '-o', 'a.so', '-s', 'WASM=%d' % wasm], stderr=PIPE, check=False)
       self.assertContained('SIDE_MODULE must only be used when compiling to an executable shared library, and not when emitting an object file', process.stderr)
@@ -6308,9 +6310,9 @@ int main(int argc, char** argv) {
       test(['-O' + str(opts), '-s', 'MAIN_MODULE=1', '-s', 'EMULATED_FUNCTION_POINTERS=2'], unchanged)
       test(['-O' + str(opts), '-s', 'MAIN_MODULE=1', '-s', 'EMULATED_FUNCTION_POINTERS=1'], flipped) # but you can disable that
 
-  @no_wasm_backend('uses SIDE_MODULE')
+  @no_wasm_backend('DCE in dynamic libraries not working yet')
   def test_minimal_dynamic(self):
-    for wasm in (1, 0):
+    def run(wasm):
       print('wasm?', wasm)
       library_file = 'library.wasm' if wasm else 'library.js'
 
@@ -6345,7 +6347,7 @@ int main(int argc, char** argv) {
           }
         ''' % library_file)
         run_process([PYTHON, EMCC, 'main.c', '-s', 'MAIN_MODULE=1', '--embed-file', library_file, '-O2', '-s', 'WASM=' + str(wasm)] + main_args)
-        self.assertContained(expected, run_js('a.out.js', assert_returncode=None, stderr=STDOUT))
+        self.assertContained(expected, run_js('a.out.js', assert_returncode=None))
         size = os.path.getsize('a.out.js')
         if wasm:
           size += os.path.getsize('a.out.wasm')
@@ -6363,12 +6365,16 @@ int main(int argc, char** argv) {
       full = test()
       # printf is not used in main, but libc was linked in, so it's there
       printf = test(library_args=['-DUSE_PRINTF'])
+
       # dce in main, and it fails since puts is not exported
       dce = test(main_args=['-s', 'MAIN_MODULE=2'], expected=('cannot', 'undefined'))
+
       # with exporting, it works
       dce = test(main_args=['-s', 'MAIN_MODULE=2', '-s', 'EXPORTED_FUNCTIONS=["_main", "_puts"]'])
+
       # printf is not used in main, and we dce, so we failz
       dce_fail = test(main_args=['-s', 'MAIN_MODULE=2'], library_args=['-DUSE_PRINTF'], expected=('cannot', 'undefined'))
+
       # exporting printf in main keeps it alive for the library
       dce_save = test(main_args=['-s', 'MAIN_MODULE=2', '-s', 'EXPORTED_FUNCTIONS=["_main", "_printf", "_puts"]'], library_args=['-DUSE_PRINTF'])
 
@@ -6385,6 +6391,10 @@ int main(int argc, char** argv) {
       side_dce_work = test(library_args=['-s', 'SIDE_MODULE=2', '-s', 'EXPORTED_FUNCTIONS=["_library_func"]'], expected='hello from library')
 
       assert side_dce_fail[1] < 0.95 * side_dce_work[1] # removing that function saves a chunk
+
+    run(wasm=True)
+    if not self.is_wasm_backend():
+      run(wasm=False)
 
   @no_wasm_backend('uses SIDE_MODULE')
   def test_ld_library_path(self):

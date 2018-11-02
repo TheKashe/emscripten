@@ -190,6 +190,7 @@ Module['callMain'] = function callMain(args) {
     var start = Date.now();
 #endif
 
+    //console.error("calling main");
 #if PROXY_TO_PTHREAD
     // User requested the PROXY_TO_PTHREAD option, so call a stub main which pthread_create()s a new thread
     // that will call the user's real main() for the application.
@@ -197,6 +198,7 @@ Module['callMain'] = function callMain(args) {
 #else
     var ret = Module['_main'](argc, argv, 0);
 #endif
+    //console.log("done main " + ret);
 
 #if BENCHMARK
     Module.realPrint('main() took ' + (Date.now() - start) + ' milliseconds');
