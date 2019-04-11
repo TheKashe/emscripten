@@ -6316,7 +6316,7 @@ int main(int argc, char** argv) {
       print('wasm?', wasm)
       library_file = 'library.wasm' if wasm else 'library.js'
 
-      def test(main_args=[], library_args=[], expected='hello from main\nhello from library'):
+      def test(main_args, library_args=[], expected='hello from main\nhello from library'):
         print('testing', main_args, library_args)
         self.clear()
         create_test_file('library.c', r'''
@@ -6386,9 +6386,9 @@ int main(int argc, char** argv) {
       # side module tests
 
       # mode 2, so dce in side, but library_func is not exported, so it is dce'd
-      side_dce_fail = test(library_args=['-s', 'SIDE_MODULE=2'], expected='cannot find side function')
+      side_dce_fail = test(main_args=['-s', 'MAIN_MODULE=1'], library_args=['-s', 'SIDE_MODULE=2'], expected='cannot find side function')
       # mode 2, so dce in side, and library_func is not exported
-      side_dce_work = test(library_args=['-s', 'SIDE_MODULE=2', '-s', 'EXPORTED_FUNCTIONS=["_library_func"]'], expected='hello from library')
+      side_dce_work = test(main_args=['-s', 'MAIN_MODULE=1'], library_args=['-s', 'SIDE_MODULE=2', '-s', 'EXPORTED_FUNCTIONS=["_library_func"]'], expected='hello from library')
 
       assert side_dce_fail[1] < 0.95 * side_dce_work[1] # removing that function saves a chunk
 

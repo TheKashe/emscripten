@@ -139,7 +139,7 @@ function fetchBinary(url) {
 function loadDynamicLibrary(lib, flags) {
   // when loadDynamicLibrary did not have flags, libraries were loaded globally & permanently
   flags = flags || {global: true, nodelete: true}
-  err('loadDynamicLibrary: ' + lib)
+  //err('loadDynamicLibrary: ' + lib)
 
   var handle = LDSO.loadedLibNames[lib];
   var dso;
@@ -298,7 +298,7 @@ function loadDynamicLibrary(lib, flags) {
 
   // module for lib is loaded - update the dso & global namespace
   function moduleLoaded(libModule) {
-    err('moduleLoaded')
+    //err('moduleLoaded')
     if (dso.global) {
       mergeLibSymbols(libModule);
     }
