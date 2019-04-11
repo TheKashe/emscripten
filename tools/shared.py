@@ -1842,11 +1842,12 @@ class Building(object):
     elif Settings.EXPORT_ALL:
       export_all = True
 
-    if Settings.MAIN_MODULE == 2:
-      cmd.append('--no-export-dynamic')
-    else:
-      cmd.append('--no-gc-sections')
-      cmd.append('--export-dynamic')
+    if Settings.RELOCATABLE:
+      if Settings.MAIN_MODULE == 2:
+        cmd.append('--no-export-dynamic')
+      else:
+        cmd.append('--no-gc-sections')
+        cmd.append('--export-dynamic')
 
     if export_all:
       cmd.append('--export-all')

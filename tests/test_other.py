@@ -6346,8 +6346,8 @@ int main(int argc, char** argv) {
             else x();
           }
         ''' % library_file)
-        run_process([PYTHON, EMCC, 'main.c', '-s', 'MAIN_MODULE=1', '--embed-file', library_file, '-O2', '-s', 'WASM=' + str(wasm)] + main_args)
-        self.assertContained(expected, run_js('a.out.js', assert_returncode=None))
+        run_process([PYTHON, EMCC, 'main.c','--embed-file', library_file, '-O2', '-s', 'WASM=' + str(wasm)] + main_args)
+        self.assertContained(expected, run_js('a.out.js', assert_returncode=None, stderr=STDOUT))
         size = os.path.getsize('a.out.js')
         if wasm:
           size += os.path.getsize('a.out.wasm')
@@ -6360,11 +6360,11 @@ int main(int argc, char** argv) {
         large = max(x, y)
         return float(100 * large) / small - 100
 
-      # main module tests
-
-      full = test()
+      full = test(main_args=['-s', 'MAIN_MODULE=1'])
       # printf is not used in main, but libc was linked in, so it's there
-      printf = test(library_args=['-DUSE_PRINTF'])
+      printf = test(main_args=['-s', 'MAIN_MODULE=1'], library_args=['-DUSE_PRINTF'])
+
+      # main module tests
 
       # dce in main, and it fails since puts is not exported
       dce = test(main_args=['-s', 'MAIN_MODULE=2'], expected=('cannot', 'undefined'))
@@ -6392,9 +6392,9 @@ int main(int argc, char** argv) {
 
       assert side_dce_fail[1] < 0.95 * side_dce_work[1] # removing that function saves a chunk
 
-    run(wasm=True)
+    run(wasm=1)
     if not self.is_wasm_backend():
-      run(wasm=False)
+      run(wasm=0)
 
   @no_wasm_backend('uses SIDE_MODULE')
   def test_ld_library_path(self):
