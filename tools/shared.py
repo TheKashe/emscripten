@@ -782,6 +782,7 @@ def exe_suffix(cmd):
 CLANG_CC = os.path.expanduser(build_clang_tool_path(exe_suffix('clang')))
 CLANG_CPP = os.path.expanduser(build_clang_tool_path(exe_suffix('clang++')))
 CLANG = CLANG_CPP
+FLANG = os.path.expanduser(build_clang_tool_path(exe_suffix('flang')))
 LLVM_LINK = build_llvm_tool_path(exe_suffix('llvm-link'))
 LLVM_AR = build_llvm_tool_path(exe_suffix('llvm-ar'))
 LLVM_OPT = os.path.expanduser(build_llvm_tool_path(exe_suffix('opt')))
@@ -797,6 +798,7 @@ EMSCRIPTEN = path_from_root('emscripten.py')
 EMCC = path_from_root('emcc.py')
 EMXX = path_from_root('em++.py')
 EMAR = path_from_root('emar.py')
+EMFC = path_from_root('emfc.py')
 EMRANLIB = path_from_root('emranlib')
 EMCONFIG = path_from_root('em-config')
 EMLINK = path_from_root('emlink.py')
@@ -1520,6 +1522,7 @@ class Building(object):
     if native:
       env['CC'] = quote(CLANG_CC)
       env['CXX'] = quote(CLANG_CPP)
+      env['FC'] = quote(FLANG)
       env['LD'] = quote(CLANG)
       env['CFLAGS'] = '-O2 -fno-math-errno'
       # get a non-native one, and see if we have some of its effects - remove them if so
@@ -1541,6 +1544,7 @@ class Building(object):
     env['CC'] = quote(unsuffixed(EMCC)) if not WINDOWS else 'python %s' % quote(EMCC)
     env['CXX'] = quote(unsuffixed(EMXX)) if not WINDOWS else 'python %s' % quote(EMXX)
     env['AR'] = quote(unsuffixed(EMAR)) if not WINDOWS else 'python %s' % quote(EMAR)
+    env['FC'] = quote(unsuffixed(EMFC)) if not WINDOWS else 'python %s' % quote(EMFC)
     env['LD'] = quote(unsuffixed(EMCC)) if not WINDOWS else 'python %s' % quote(EMCC)
     env['NM'] = quote(LLVM_NM)
     env['LDSHARED'] = quote(unsuffixed(EMCC)) if not WINDOWS else 'python %s' % quote(EMCC)
@@ -1550,6 +1554,7 @@ class Building(object):
     env['CFLAGS'] = env['EMMAKEN_CFLAGS'] = ' '.join(Building.COMPILER_TEST_OPTS)
     env['HOST_CC'] = quote(CLANG_CC)
     env['HOST_CXX'] = quote(CLANG_CPP)
+    env['HOST_FC'] = quote(FLANG)
     env['HOST_CFLAGS'] = "-W" # if set to nothing, CFLAGS is used, which we don't want
     env['HOST_CXXFLAGS'] = "-W" # if set to nothing, CXXFLAGS is used, which we don't want
     env['PKG_CONFIG_LIBDIR'] = path_from_root('system', 'local', 'lib', 'pkgconfig') + os.path.pathsep + path_from_root('system', 'lib', 'pkgconfig')
